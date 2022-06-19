@@ -51,6 +51,10 @@ my $zfs_get_base = sub {
     }
 };
 
+my $STATUS_MARKER = 'available,used';
+my $STATUS_MAXAGE = 600;
+my %STATUS_DATA;
+
 sub zfs_request {
     my ($class, $scfg, $timeout, $method, @params) = @_;
 
@@ -74,6 +78,7 @@ sub zfs_request {
     } else {
 
 	my $target = 'root@' . $scfg->{portal};
+        my $hkey = 0;
 
 	my $cmd = [@ssh_cmd, '-i', "$id_rsa_path/$scfg->{portal}_id_rsa", $target];
 
@@ -85,12 +90,23 @@ sub zfs_request {
 
 	push @$cmd, @params;
 
+        if ($method eq 'get' && $params[-2] eq $STATUS_MARKER) {
+            $hkey = $params[-1] . '@' . $target;
+            if (exists($STATUS_DATA{$hkey}) && time - $STATUS_DATA{$hkey}[0] <= $STATUS_MAXAGE) {
+                return $STATUS_DATA{$hkey}[1];
+            }
+        }
+
 	my $output = sub {
 	    my $line = shift;
 	    $msg .= "$line\n";
         };
 
         run_command($cmd, outfunc => $output, timeout => $timeout);
+
+        if ($hkey) {
+            $STATUS_DATA{$hkey} = [time, $msg];
+        }
     }
 
     return $msg;

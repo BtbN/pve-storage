@@ -59,7 +59,7 @@ sub zfs_request {
     my ($class, $scfg, $timeout, $method, @params) = @_;
 
     $timeout = PVE::RPCEnvironment->is_worker() ? 60*60 : 10
-	if !$timeout;
+        if !$timeout;
 
     my $msg = '';
 
@@ -77,18 +77,18 @@ sub zfs_request {
         }
     } else {
 
-	my $target = 'root@' . $scfg->{portal};
+        my $target = 'root@' . $scfg->{portal};
         my $hkey = 0;
 
-	my $cmd = [@ssh_cmd, '-i', "$id_rsa_path/$scfg->{portal}_id_rsa", $target];
+        my $cmd = [@ssh_cmd, '-i', "$id_rsa_path/$scfg->{portal}_id_rsa", $target];
 
         if ($method eq 'zpool_list') {
-	    push @$cmd, 'zpool', 'list';
-	} else {
-	    push @$cmd, 'zfs', $method;
+            push @$cmd, 'zpool', 'list';
+        } else {
+            push @$cmd, 'zfs', $method;
         }
 
-	push @$cmd, @params;
+        push @$cmd, @params;
 
         if ($method eq 'get' && $params[-2] eq $STATUS_MARKER) {
             $hkey = $params[-1] . '@' . $target;
@@ -97,9 +97,9 @@ sub zfs_request {
             }
         }
 
-	my $output = sub {
-	    my $line = shift;
-	    $msg .= "$line\n";
+        my $output = sub {
+            my $line = shift;
+            $msg .= "$line\n";
         };
 
         run_command($cmd, outfunc => $output, timeout => $timeout);
